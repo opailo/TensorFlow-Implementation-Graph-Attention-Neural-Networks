@@ -1,4 +1,4 @@
-## Transformer Implementation from ([Vaswani et al.](https://arxiv.org/abs/1706.03762))
+## Graph Attention Network Implementation from ([Velickovic et al.](https://arxiv.org/abs/1710.10903))
 
 # What Are Graphs
 <p align="left">
