@@ -153,6 +153,85 @@ Gated Graph Neural Networks use reccurent units to update the states iteratively
 
 Most other variants of GNNs will only vary in the method of message passing and aggregation
 
+# Graph Attention Networks
+
+When it comes to calculating the updated states for all of the nodes, the calculation isn't performed on one node at a time. Instead, the feature vectors that represent the nodes or edges are stacked into a matrix as such:
+<p align="left">
+<img src="data/PIC 13.png"/>
+</p>
+
+For GNNs, the general formula for describing the embeddng calculation is shown in the above image as well. 
+* This formula is what is extended to include the attention head module
+<p align="left">
+<img src="data/PIC 14.png"/>
+</p>
+
+The learnable weight matrix is made up of the input shape of the original feature matrix (`4` in the example above) and the shape of the embedded feature matrix. This matrix is a mutltiplyer for the feature matrix.
+* When multiplying the individual feature vectors by the learnable weight matrix, the output of this multiplication is passed through a single layer neural network
+* For each individual node, this process should be performed only for the direct neighbors of the node  
+ * From there, the neighboring node output would be added together into one embedding
+  * This is the SUM in the formula above.
+
+The adjacency matrix has a shape of (5, 5) in the image below (5 nodes by 5 nodes). 
+* Multiplying the adjacency matrix by the learnable weight matrix gives us the sum of neighbor messages
+  * The output of this multiplication is the embedding per node matrix (far right in the image) and has a shape of (5, 8)
+    * Each row in the matrix is the updated node feature vector with each now having some information about it's neighboring nodes
+
+Matrix multiplication between the features per node matrix and the learnable weight matrix is performed in the following steps:
+1. One row of the `features per node matrix` is multiplyed by each column of the `learnable weight matrix`
+2. The results of each seperate multiplication are summed up into the new feature vector with the updated embeddings
+<p align="left">
+<img src="data/PIC 15.png"/>
+</p>
+
+* Note that in the adjacency matrix the `0`'s represent a lack of a connection between the two nodes
+  * This is important because when this matrix is multiplied by the resulting embedding node matrix, the values in that spot will be zeroed out
+    * This is so that nodes that aren't directly neighbors to the current state node don't pass on their information
+* Self loops are also included in the adjacency matrix in the form of the `1`'s that move diagonaly through the matrix
+  * This allows the current node to easily reference itself to include it's own feature vector when updating    
+
+## How this process is extended with an attention mechanism
+
+The basic idea of attention in GNNs is to learn how important `Node-J`'s features are to `Node-I`
+* This 'importance' is represented by the attention coefficient. 
+  * For example, in the image below, the attention coefficient `e12` (i.e. the importance of the content of `Node-2` to `Node-1`) is larger than that of `e13`
+<p align="left">
+<img src="data/PIC 16.png"/>
+</p>
+Attention modules a very popular in text data and natural language processing models.
+* Attention works well on text data because it is independent of the number and order of the words.
+* This is similar for graph data in that the order and number of nodes are independent and we often need to consider the permutation invariance
+
+In order to compare the attention coefficient values for each node, the values must be normalized. The normalization function used in the paper is given below in the form of a softmax function which normalizes the values to be between 0 and 1:
+<p align="left">
+<img src="data/PIC 17.png"/>
+</p>
+
+## The Attention Module 
+
+<p align="left">
+<img src="data/PIC 18.png"/>
+</p>
+
+* The inputs for the attention module are the two transformed node feature vectors that the outputed attention coefficient will refer to
+* The two feature vectors are concatenated and then passed into a single layer neural network in which they are multiplied by the learned attention weights
+* A leaky ReLu activation is applied the the output of the layer
+  * The reason for this is that we want to emphasize positive relationships between the nodes
+* From there, the vector is passed into the softmax function to normalize 
+
+## Integrating The Attention Module
+
+This is accomplished by simply applying each of the neighboring node states by the attention coefficient
+* This results in an updated feature vector for the neighboring nodes that will pass on the most important information to the current state node
+
+The attention coefficient is integrated into the summation of the neighboring node vector aggregation as shown below:
+<p align="left">
+<img src="data/PIC 19.png"/>
+</p>
+* From there the rest of the message passing process continues as usual
+* Here you can see that the adjacency matrix's non-zero values represent the weights after being updated with their respective attention coefficients
+
+
 ## License
 
 MIT License
