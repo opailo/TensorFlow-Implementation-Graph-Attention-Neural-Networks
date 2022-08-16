@@ -1,0 +1,11 @@
+# Define hyper-parameters
+HIDDEN_UNITS = 100
+NUM_HEADS = 8
+NUM_LAYERS = 3
+OUTPUT_DIM = len(class_values_list)
+
+NUM_EPOCHS = 100
+BATCH_SIZE = 256
+VALIDATION_SPLIT = 0.1
+LEARNING_RATE = 3e-1
+MOMENTUM = 0.9
